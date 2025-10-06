@@ -4,6 +4,8 @@ import os
 import pandas as pd
 import joblib
 from Bio import SeqIO
+import sys
+
 
 # A helper function to run external commands (like cutadapt, vsearch)
 def run_command(command):
@@ -31,21 +33,20 @@ def run_cleaning(args):
     """Stage 2: Runs cutadapt to clean the raw FASTQ files."""
     print(">>> STAGE 2: CLEANING RAW READS <<<")
     
-    # Define the output file paths
     args.trimmed_f = os.path.join(args.temp_dir, "reads_1.trimmed.fastq")
     args.trimmed_r = os.path.join(args.temp_dir, "reads_2.trimmed.fastq")
     
     # --- FIX STARTS HERE ---
-    # Build the cutadapt command as a clean, single-line string
+    # Build the command to run cutadapt as a Python module
     command = (
-        f"cutadapt -q 20 -m 150 "
+        f"{sys.executable} -m cutadapt -q 20 -m 150 " # <--- Run as a module
         f"-o {args.trimmed_f} -p {args.trimmed_r} "
         f"{args.forward_reads} {args.reverse_reads}"
     )
     # --- FIX ENDS HERE ---
     
     run_command(command)
-
+    
 def run_clustering(args):
     """Stage 3: Runs vsearch to discover OTUs."""
     print(">>> STAGE 3: DISCOVERING OTUs VIA CLUSTERING <<<")
