@@ -129,7 +129,14 @@ def main():
     parser.add_argument("--reverse_reads", required=True, help="Path to the reverse FASTQ file (R2).")
     parser.add_argument("--output_dir", required=True, help="Directory to save the final reports.")
     parser.add_argument("--sample_name", required=True, help="A name for the sample, used for output files.")
-    parser.add_argument("--model_dir", default="models", help="Directory where the trained model assets are stored.")
+    
+    # --- FIX STARTS HERE ---
+    # We will build an absolute path to the models directory relative to THIS script's location
+    # This makes the script runnable from anywhere.
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    default_model_dir = os.path.join(script_dir, "models")
+    parser.add_argument("--model_dir", default=default_model_dir, help="Directory where the trained model assets are stored.")
+    # --- FIX ENDS HERE ---
     
     args = parser.parse_args()
 
@@ -146,7 +153,6 @@ def main():
     run_classification(args)
 
     print(f"\n=== Pipeline for Sample: {args.sample_name} Completed Successfully! ===")
-
 
 # This standard Python construct makes the script runnable from the command line
 if __name__ == "__main__":
