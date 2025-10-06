@@ -51,13 +51,23 @@ def run_clustering(args):
     """Stage 3: Runs vsearch to discover OTUs."""
     print(">>> STAGE 3: DISCOVERING OTUs VIA CLUSTERING <<<")
     
-    # Define intermediate file paths
+    # --- FIX STARTS HERE ---
+    # Build an absolute path to our self-contained vsearch executable
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    vsearch_path = os.path.join(script_dir, "bin", "vsearch")
+    
+    # On Linux/Mac, we need to make sure the file is executable
+    # This won't do anything on Windows, but is crucial for Streamlit's Linux server
+    if os.path.exists(vsearch_path):
+        os.chmod(vsearch_path, 0o755)
+    else:
+        raise FileNotFoundError(f"VSEARCH executable not found at {vsearch_path}")
+    # --- FIX ENDS HERE ---
+
     combined_fastq = os.path.join(args.temp_dir, "all.trimmed.fastq")
     unique_fasta = os.path.join(args.temp_dir, "unique_sequences.fasta")
-    args.otus_fasta = os.path.join(args.temp_dir, "otus.fasta") # This is the final output of this stage
+    args.otus_fasta = os.path.join(args.temp_dir, "otus.fasta")
 
-    # --- FIX STARTS HERE ---
-    # 1. Combine trimmed files using Python, avoiding shell commands.
     print("--- Combining trimmed FASTQ files... ---")
     with open(combined_fastq, 'wb') as outfile:
         with open(args.trimmed_f, 'rb') as infile:
@@ -65,16 +75,15 @@ def run_clustering(args):
         with open(args.trimmed_r, 'rb') as infile:
             outfile.write(infile.read())
     print("--- File combination successful ---\n")
-    # --- FIX ENDS HERE ---
 
-    # 2. Dereplicate (This command is universal and doesn't change)
-    derep_command = f'vsearch --fastx_uniques {combined_fastq} --sizeout --fastaout {unique_fasta}'
+    # Use the full path to our vsearch executable
+    derep_command = f'{vsearch_path} --fastx_uniques {combined_fastq} --sizeout --fastaout {unique_fasta}'
     run_command(derep_command)
 
-    # 3. Cluster (This command is universal and doesn't change)
-    cluster_command = f'vsearch --cluster_size {unique_fasta} --id 0.97 --centroids {args.otus_fasta} --uc {os.path.join(args.temp_dir, "clusters.uc")}'
+    # Use the full path to our vsearch executable
+    cluster_command = f'{vsearch_path} --cluster_size {unique_fasta} --id 0.97 --centroids {args.otus_fasta} --uc {os.path.join(args.temp_dir, "clusters.uc")}'
     run_command(cluster_command)
-
+    
 def run_classification(args):
     """Stage 4 & 5: Loads the AI model and classifies the discovered OTUs."""
     print(">>> STAGE 4 & 5: CLASSIFYING OTUs AND GENERATING REPORT <<<")
