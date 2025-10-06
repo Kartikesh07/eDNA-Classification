@@ -1,3 +1,4 @@
+import sys
 import streamlit as st
 import subprocess
 import os
@@ -50,7 +51,7 @@ if run_button and uploaded_file_r1 and uploaded_file_r2 and sample_name_input:
         
         # Build the command
         command = [
-            "python", "run_pipeline.py",
+            sys.executable, "run_pipeline.py", # <--- THIS IS THE FIX
             "--forward_reads", forward_reads_path,
             "--reverse_reads", reverse_reads_path,
             "--output_dir", output_dir,
